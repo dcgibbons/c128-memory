@@ -1,0 +1,40 @@
+GAL16V8
+C128MMU2
+
+A0  A1  A2  A3  RW  D0  D1  D6  D7  GND
+NC  NC  NC  NC  D0X D6X NC  NC  NC  VCC
+
+; Data remap for the second 8722 MMU (U2) on the C128DCR MMU riser.
+; Device: Microchip ATF16V8B (GAL16V8 compatible), complex mode.
+;
+; D6X -> U2 D6: CPU D6 at $xxx5 (MCR), $xxx7 (P0L), $xxx9 (P1L);
+;               CPU D7 everywhere else, so U2's bank bit 6 follows the
+;               CPU's 256K bank bit 7 (CR, PCRs, RCR, $FF00 LCR).
+; D0X -> U2 D0: CPU D1 at $xxx8 / $xxxA (P0H / P1H bank pointers);
+;               CPU D0 everywhere else.
+; Both outputs drive only while R/W is low (a write); during reads they
+; are off, so U2 never fights them.
+;
+; Pass-D6 addresses (A3..A0): 0101, 0111 -> /A3*A2*A0 ; 1001 -> A3*/A2*/A1*A0
+; Their complement:           /A0 + /A3*/A2 + A3*A2 + A3*A1
+
+D6X.T = D6 * /A3 * A2 * A0
+      + D6 * A3 * /A2 * /A1 * A0
+      + D7 * /A0
+      + D7 * /A3 * /A2
+      + D7 * A3 * A2
+      + D7 * A3 * A1
+D6X.E = /RW
+
+D0X.T = D1 * A3 * /A2 * /A0
+      + D0 * /A3
+      + D0 * A2
+      + D0 * A0
+D0X.E = /RW
+
+DESCRIPTION
+
+C128DCR MMU riser, second-MMU data remap.  After ytmytm/c128-mmu-256k-exp
+(GAL22V10 equations), with two changes: P0L/P1L ($xxx7/$xxx9) are passed
+unremapped so both MMUs hold the same relocation pages, and the outputs are
+3-stated during reads.  Build: galasm riser.pld -> riser.jed.

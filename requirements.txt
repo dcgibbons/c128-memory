@@ -1,0 +1,4 @@
+# Python dependencies for board generators and DRC/preview scripts
+numpy
+Pillow
+# KiCad 9 (pcbnew Python module + kicad-cli) is required for full builds (zone fill, ERC/DRC, and Gerbers)
