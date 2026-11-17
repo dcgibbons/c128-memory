@@ -2,6 +2,8 @@
 
 Open-hardware memory upgrade and replacement boards for the Commodore 128 family (**C128**, **C128D**, and **C128DCR**), generated from Python.
 
+![Photo of Commodore 128DCR with SRAM and MMU modules installed](docs/c128dcr.jpeg)
+
 ---
 
 ## Design Philosophy: Zero Motherboard Modifications
