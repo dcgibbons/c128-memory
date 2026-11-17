@@ -11,6 +11,9 @@ Open-hardware memory upgrade and replacement boards for the Commodore 128 family
 * Commodore 128 flat - IN DEVELOPMENT
 * Commodore 128D - BACKLOG
 * Commodore 128DCR - AVAILABLE
+  * Release v1.0 (Gerbers, BOMs, schematics, GAL file): [c128dcr-v1.0.zip](https://github.com/dcgibbons/c128-memory/releases/download/v1.0/c128dcr-v1.0.zip)
+
+Buy it assembled: [Commodore 128 256KB Memory Upgrade on Tindie](https://www.tindie.com/products/chadwicks-retro-fun/commodore-128-256kb-memory-upgrade/)
 
 --
 
