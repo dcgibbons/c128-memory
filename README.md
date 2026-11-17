@@ -2,9 +2,17 @@
 
 Open-hardware memory upgrade and replacement boards for the Commodore 128 family (**C128**, **C128D**, and **C128DCR**), generated from Python.
 
-![Photo of Commodore 128DCR with SRAM and MMU modules installed](docs/c128dcr.jpeg)
+![Photo of Commodore 128DCR with SRAM and MMU modules installed](assets/c128dcr.png)
 
 ---
+
+## Project Status
+
+* Commodore 128 flat - IN DEVELOPMENT
+* Commodore 128D - BACKLOG
+* Commodore 128DCR - AVAILABLE
+
+--
 
 ## Design Philosophy: Zero Motherboard Modifications
 
@@ -93,6 +101,70 @@ During the re-engineering and simulation of earlier dual-MMU designs, several su
 | **C128DCR** | 4× 64K×4 DRAM (4464, 18-pin DIP: U38–U41) | Metal desktop chassis, reasonable vertical clearance | [`c128dcr/sram/`](c128dcr/sram/) (**v1.0 hardware-verified** in 128 KB solo mode), [`c128dcr/mmu-riser/`](c128dcr/mmu-riser/) (**v1.0 design complete**, DRC & Gerbers ready, unbuilt) |
 | **C128** (flat) | 16× 64K×1 DRAM (4164, 16-pin DIP: U42–U57) | Extremely tight vertical clearance under keyboard frame & RF shield | [`c128/sram/`](c128/sram/), [`c128/mmu-riser/`](c128/mmu-riser/) — **In Development** (specifications & clearance constraints defined) |
 | **C128D** (plastic) | 16× 64K×1 DRAM (4164, 16-pin DIP: U42–U57) | Roomy desktop case; uses the same `c128` low-profile boards | [`c128/sram/`](c128/sram/), [`c128/mmu-riser/`](c128/mmu-riser/) — **In Development** (shares `c128` low-profile design) |
+
+---
+
+## C128 Memory Qualification ROM
+
+The [`tools/memtest/`](tools/memtest/) directory contains a native MOS 8502
+memory qualification and burn-in program for stock 128 KB machines, the SRAM
+replacement in 128 KB solo mode, and the complete 256 KB SRAM/MMU-riser
+upgrade. It starts from the C128's internal Function ROM before the Kernal
+initializes RAM, automatically detects two or four 64 KB banks, and tests
+65,521 of 65,536 bytes per bank (99.98%).
+
+<p align="center">
+  <img src="assets/c128-memtest-x128.png" alt="C128 memory qualification ROM running Stage 3 in x128 VICE" width="600">
+</p>
+
+<p align="center"><em>The ROM running in x128 VICE: 128 KB detected, Stage 3/7 at 1 MHz, with no errors.</em></p>
+
+Each pass exercises the data and address buses, zero page, hardware stack,
+screen RAM, the full remaining address space, cross-bank isolation, MMU page
+relocation and Common RAM, and Function ROM write-through. The complete
+seven-stage sequence runs once at 1 MHz with VIC-IIe DMA contention and again
+at 2 MHz. A successful cycle turns the border green and continues as a
+thermal burn-in test; a failure halts with the bank, address, speed, stage,
+expected and actual values, XOR mask, and failing data bits on screen. Brief
+screen blanking during the 2 MHz portions is normal.
+
+### Build and Run
+
+```bash
+python3 tools/memtest/build.py
+python3 tools/memtest/test_memtest.py
+```
+
+The build writes the raw 32 KB image to
+`tools/memtest/fab/c128-memtest-u36.bin`; the second command runs the simulator
+and fault-injection regression suite. Program that image into a OneROM or a
+27C256-compatible 32 KB EPROM/EEPROM, install it in the C128's **U36 internal
+Function ROM socket**, connect a display to the 40-column output, and power on
+or reset the machine. The test starts automatically and loops until the
+machine is powered off or reset.
+
+The test is destructive to RAM: do not run it with data you expect to retain.
+Its generated `fab/` directory is intentionally git-ignored.
+
+For development, the same image can be run in VICE:
+
+```bash
+x128 -40col -intfunc 1 \
+  -intfrom tools/memtest/fab/c128-memtest-u36.bin
+```
+
+### ROM and Cartridge Compatibility
+
+| Delivery method | Current support | Details |
+|---|---|---|
+| U36 internal Function ROM | **Yes** | This is the image's intended target; both 16 KB halves remain available while the test destroys RAM beneath them. |
+| x128 VICE internal Function ROM | **Yes** | Use `-intfunc 1` and `-intfrom` as shown above. |
+| Native C128 external Function ROM cartridge | **Not as-is** | A cartridge variant is feasible, but it must select the external Function ROM in every MMU configuration and replace the U36-specific write-through test in Stage 7. |
+| Ordinary C64-style 8 KB/16 KB cartridge | **No** | The test requires C128 mode, the MOS 8722 MMU, and resident lower and upper Function ROM code. |
+| Disk, tape, or loadable PRG | **No** | A RAM-loaded program would overwrite its own code, zero page, and stack during the qualification pass. |
+
+See the [memory tester documentation](tools/memtest/README.md) for the complete
+stage descriptions, coverage exclusions, and border/status meanings.
 
 ---
 
