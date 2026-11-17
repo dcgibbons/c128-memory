@@ -21,3 +21,6 @@ common/router_rs/target/
 *.dylib
 *.pyd
 .DS_Store
+
+# Release packages (make release-c128dcr)
+dist/
